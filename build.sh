@@ -17,10 +17,22 @@ if [ -f /etc/os-release ] && . /etc/os-release && [ "${ID:-}" = "ubuntu" ] && dp
   echo "  sudo apt install coreutils-from-gnu   i ponow budowe."
 fi
 
+# Ubuntu ma stare live-build 3.0 (buduje tylko Ubuntu) - uzyj nowego z Debiana, uruchamianego ze zrodel
+LBSRC=/opt/live-build
+if [ ! -f "$LBSRC/frontend/lb" ]; then
+  rm -rf "$LBSRC"
+  git clone --depth 1 https://salsa.debian.org/live-team/live-build.git "$LBSRC"
+fi
+export LIVE_BUILD="$LBSRC"
+export PATH="$LBSRC/frontend:$PATH"
+hash -r
+echo "Uzywam live-build: $(lb --version 2>/dev/null || echo '?')"
+
 mkdir -p "$NAME" && cd "$NAME"
 lb clean --purge || true
 
 lb config \
+  --mode debian \
   --distribution bookworm \
   --architectures "$ARCH" \
   --archive-areas "main contrib non-free non-free-firmware" \
@@ -70,9 +82,8 @@ cat > config/includes.chroot/etc/sysctl.d/99-retronova.conf <<'EOF'
 vm.swappiness=10
 vm.vfs_cache_pressure=50
 EOF
-echo -e 'ALGO=zstd\nPERCENT=50' > config/includes.chroot/etc/default/zramswap 2>/dev/null || {
-  mkdir -p config/includes.chroot/etc/default
-  echo -e 'ALGO=zstd\nPERCENT=50' > config/includes.chroot/etc/default/zramswap; }
+mkdir -p config/includes.chroot/etc/default
+echo -e 'ALGO=zstd\nPERCENT=50' > config/includes.chroot/etc/default/zramswap
 
 # ---------- DOMYŚLNY MOTYW XFCE ----------
 if [ "$THEME" = "xp" ]; then GTK="Windows-XP"; WM="Windows-XP"; ICON="Windows-XP"; else GTK="Windows-7"; WM="Windows-7"; ICON="Windows-7"; fi
