@@ -12,7 +12,7 @@ apt-get update
 apt-get install -y live-build debootstrap debian-archive-keyring squashfs-tools xorriso git
 
 # Ubuntu 25.10+ uzywa Rust-owych narzedzi (uutils), z ktorymi debootstrap/chroot bywa problematyczny.
-if [ -f /etc/os-release ] && . /etc/os-release && [ "${ID:-}" = "ubuntu" ] && dpkg -s rust-coreutils >/dev/null 2>&1; then
+if [ "$(. /etc/os-release 2>/dev/null; echo "${ID:-}")" = "ubuntu" ] && dpkg -s rust-coreutils >/dev/null 2>&1; then
   echo "UWAGA: wykryto rust-coreutils. Jesli budowa padnie na 'chroot', uruchom:"
   echo "  sudo apt install coreutils-from-gnu   i ponow budowe."
 fi
