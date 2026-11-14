@@ -59,7 +59,7 @@ lb config \
   --archive-areas "main contrib non-free non-free-firmware" \
   --binary-images iso-hybrid \
   --debian-installer live \
-  --bootappend-live "boot=live components quiet splash noautologin" \
+  --bootappend-live "boot=live components quiet splash" \
   --iso-application "RetroNova" --iso-volume "RETRONOVA" \
   --apt-recommends false
 

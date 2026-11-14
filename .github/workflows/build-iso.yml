@@ -8,16 +8,15 @@ on:
         type: choice
         default: amd64
         options: [amd64, i386]
-      theme:
-        description: "Motyw"
-        type: choice
-        default: win7
-        options: [win7, xp]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [win7, xp]
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +26,7 @@ jobs:
           df -h /
 
       - name: Zbuduj ISO
-        run: sudo ./build.sh "${{ inputs.arch }}" "${{ inputs.theme }}"
+        run: sudo ./build.sh "${{ inputs.arch }}" "${{ matrix.theme }}"
 
       - name: Pokaz wynik
         run: ls -lh retronova/*.iso
@@ -35,7 +34,36 @@ jobs:
       - name: Wyslij ISO jako artefakt
         uses: actions/upload-artifact@v4
         with:
-          name: retronova-${{ inputs.arch }}-${{ inputs.theme }}-iso
+          name: retronova-${{ inputs.arch }}-${{ matrix.theme }}-iso
           path: retronova/*.iso
           compression-level: 0
+          retention-days: 7
+
+      - name: Zrzuty ekranu (uruchomienie w QEMU)
+        if: ${{ inputs.arch == 'amd64' }}
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y qemu-system-x86 socat
+          ISO=$(ls retronova/*.iso | head -1)
+          ACCEL=tcg
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; ACCEL=kvm; fi
+          echo "Akceleracja: $ACCEL"
+          mkdir -p shots
+          qemu-system-x86_64 -machine accel=$ACCEL -cpu max -smp 2 -m 3072 \
+            -cdrom "$ISO" -boot d -vga std -display none \
+            -monitor unix:/tmp/mon,server,nowait &
+          elapsed=0
+          for t in 60 120 180 300 420; do
+            sleep $((t - elapsed)); elapsed=$t
+            printf 'screendump shots/shot-%s.png -f png\n' "$t" | timeout 10 socat - UNIX-CONNECT:/tmp/mon || true
+          done
+          ls -lh shots
+
+      - name: Wyslij zrzuty ekranu
+        if: ${{ always() && inputs.arch == 'amd64' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: screens-${{ matrix.theme }}
+          path: shots/*.png
+          if-no-files-found: warn
           retention-days: 7
