@@ -40,7 +40,7 @@ jobs:
           retention-days: 7
 
       - name: Zrzuty ekranu (uruchomienie w QEMU)
-        if: ${{ inputs.arch == 'amd64' }}
+        if: false
         continue-on-error: true
         run: |
           sudo apt-get install -y qemu-system-x86 socat
@@ -60,7 +60,7 @@ jobs:
           ls -lh shots
 
       - name: Wyslij zrzuty ekranu
-        if: ${{ always() && inputs.arch == 'amd64' }}
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: screens-${{ matrix.theme }}

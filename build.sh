@@ -77,7 +77,7 @@ mkdir -p config/package-lists config/hooks/live config/includes.chroot/etc/skel/
 # ---------- PAKIETY ----------
 cat > config/package-lists/retronova.list.chroot <<EOF
 $KERNEL
-live-boot live-config live-config-systemd locales keyboard-configuration sudo
+live-boot live-config live-config-systemd user-setup live-tools locales keyboard-configuration sudo
 xorg lightdm lightdm-gtk-greeter
 xfce4-panel xfce4-session xfce4-settings xfdesktop4 xfwm4 xfce4-whiskermenu-plugin
 xfce4-pulseaudio-plugin xfce4-notifyd xfce4-terminal thunar thunar-archive-plugin thunar-volman
