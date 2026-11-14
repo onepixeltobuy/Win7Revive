@@ -59,7 +59,7 @@ lb config \
   --archive-areas "main contrib non-free non-free-firmware" \
   --binary-images iso-hybrid \
   --debian-installer live \
-  --bootappend-live "boot=live components quiet splash" \
+  --bootappend-live "boot=live components quiet splash locales=pl_PL.UTF-8 keyboard-layouts=pl timezone=Europe/Warsaw" \
   --iso-application "RetroNova" --iso-volume "RETRONOVA" \
   --apt-recommends false
 
@@ -77,7 +77,7 @@ mkdir -p config/package-lists config/hooks/live config/includes.chroot/etc/skel/
 # ---------- PAKIETY ----------
 cat > config/package-lists/retronova.list.chroot <<EOF
 $KERNEL
-live-boot live-config
+live-boot live-config live-config-systemd locales keyboard-configuration sudo
 xorg lightdm lightdm-gtk-greeter
 xfce4-panel xfce4-session xfce4-settings xfdesktop4 xfwm4 xfce4-whiskermenu-plugin
 xfce4-pulseaudio-plugin xfce4-notifyd xfce4-terminal thunar thunar-archive-plugin thunar-volman
