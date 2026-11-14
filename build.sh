@@ -20,8 +20,13 @@ fi
 # Ubuntu ma stare live-build 3.0 (buduje tylko Ubuntu) - uzyj nowego z Debiana, uruchamianego ze zrodel
 LBSRC=/opt/live-build
 if [ ! -f "$LBSRC/frontend/lb" ]; then
-  rm -rf "$LBSRC"
-  git clone --depth 1 https://salsa.debian.org/live-team/live-build.git "$LBSRC"
+  ok=0
+  for i in 1 2 3 4 5; do
+    rm -rf "$LBSRC"
+    if git -c http.version=HTTP/1.1 clone --depth 1 https://salsa.debian.org/live-team/live-build.git "$LBSRC"; then ok=1; break; fi
+    echo "Pobieranie live-build nie powiodlo sie (proba $i/5), ponawiam za 5 s..."; sleep 5
+  done
+  [ "$ok" -eq 1 ] || { echo "Nie udalo sie pobrac live-build z salsa.debian.org. Sprawdz internet/VPN i uruchom ponownie."; exit 1; }
 fi
 export LIVE_BUILD="$LBSRC"
 export PATH="$LBSRC/frontend:$PATH"
