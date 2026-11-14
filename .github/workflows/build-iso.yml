@@ -1,0 +1,41 @@
+name: Build ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: "Architektura (i386 = bardzo stare PC)"
+        type: choice
+        default: amd64
+        options: [amd64, i386]
+      theme:
+        description: "Motyw"
+        type: choice
+        default: win7
+        options: [win7, xp]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zwolnij miejsce na dysku
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Zbuduj ISO
+        run: sudo ./build.sh "${{ inputs.arch }}" "${{ inputs.theme }}"
+
+      - name: Pokaz wynik
+        run: ls -lh retronova/*.iso
+
+      - name: Wyslij ISO jako artefakt
+        uses: actions/upload-artifact@v4
+        with:
+          name: retronova-${{ inputs.arch }}-${{ inputs.theme }}-iso
+          path: retronova/*.iso
+          compression-level: 0
+          retention-days: 7
