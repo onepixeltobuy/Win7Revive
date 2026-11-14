@@ -1,0 +1,80 @@
+name: Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID uruchomienia Build ISO, z ktorego wziac ISO"
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [win7, xp]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: retronova-amd64-${{ matrix.theme }}-iso
+          path: iso
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Uruchom w QEMU i zrob zrzuty
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 socat
+          ISO=$(ls iso/*.iso | head -1)
+          ACCEL=tcg
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; ACCEL=kvm; fi
+          echo "Akceleracja: $ACCEL"
+          mkdir -p shots
+          mon() { printf '%s\n' "$1" | timeout 10 socat - UNIX-CONNECT:/tmp/mon || true; }
+          qemu-system-x86_64 -machine accel=$ACCEL -cpu max -smp 2 -m 3072 \
+            -cdrom "$ISO" -boot d -vga std -display none \
+            -monitor unix:/tmp/mon,server,nowait &
+          sleep 25
+          mon "sendkey ret"
+          elapsed=25
+          for t in 90 150 240 360 480; do
+            sleep $((t - elapsed)); elapsed=$t
+            mon "screendump shots/shot-$t.png -f png"
+          done
+          ls -lh shots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screens-${{ matrix.theme }}
+          path: shots/*.png
+          if-no-files-found: warn
+
+  publish:
+    needs: shots
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: screens-*
+          path: new-screens
+
+      - name: Zapisz zrzuty w repozytorium
+        run: |
+          git rm -r -q --ignore-unmatch screenshots
+          mkdir -p screenshots
+          cp -r new-screens/* screenshots/
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add screenshots
+          git commit -m "Add screenshots (boot with Enter) from run ${{ inputs.run_id }}"
+          git push
