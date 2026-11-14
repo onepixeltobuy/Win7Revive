@@ -42,8 +42,13 @@ jobs:
             -monitor unix:/tmp/mon,server,nowait &
           sleep 25
           mon "sendkey ret"
-          elapsed=25
-          for t in 90 150 240 360 480; do
+          sleep 70
+          mon "screendump shots/shot-95-login.png -f png"
+          for k in u s e r ret; do mon "sendkey $k"; sleep 1; done
+          sleep 2
+          for k in l i v e ret; do mon "sendkey $k"; sleep 1; done
+          elapsed=105
+          for t in 150 210 300 420 540; do
             sleep $((t - elapsed)); elapsed=$t
             mon "screendump shots/shot-$t.png -f png"
           done

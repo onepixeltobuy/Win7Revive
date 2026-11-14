@@ -151,6 +151,15 @@ Name=RetroNova first login
 Exec=/usr/local/bin/retronova-firstlogin
 EOF
 
+# ---------- AUTOLOGOWANIE (uzytkownik live: user / haslo: live) ----------
+mkdir -p config/includes.chroot/etc/lightdm/lightdm.conf.d
+cat > config/includes.chroot/etc/lightdm/lightdm.conf.d/50-retronova.conf <<'EOF'
+[Seat:*]
+autologin-user=user
+autologin-user-timeout=0
+autologin-session=xfce
+EOF
+
 # ---------- INSTALATOR GIER (Minecraft + Roblox) ----------
 cat > config/includes.chroot/usr/local/bin/retronova-games <<'EOF'
 #!/bin/sh
