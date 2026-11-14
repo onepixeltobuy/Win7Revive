@@ -31,6 +31,10 @@ fi
 export LIVE_BUILD="$LBSRC"
 export PATH="$LBSRC/frontend:$PATH"
 hash -r
+# usun zmienne LB_* odziedziczone ze srodowiska (moga psuc konfiguracje)
+for v in $(env | grep -o '^LB_[A-Za-z0-9_]*' || true); do unset "$v"; done
+# diagnostyka: skad moze pochodzic zla wartosc initramfs
+grep -rsn 'LB_INITRAMFS' /etc/live 2>/dev/null || true
 echo "Uzywam live-build: $(lb --version 2>/dev/null || echo '?')"
 
 mkdir -p "$NAME" && cd "$NAME"
@@ -38,6 +42,7 @@ lb clean --purge || true
 
 lb config \
   --mode debian \
+  --initramfs live-boot \
   --distribution bookworm \
   --architectures "$ARCH" \
   --archive-areas "main contrib non-free non-free-firmware" \
