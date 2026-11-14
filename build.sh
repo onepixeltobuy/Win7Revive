@@ -34,15 +34,26 @@ hash -r
 # usun zmienne LB_* odziedziczone ze srodowiska (moga psuc konfiguracje)
 for v in $(env | grep -o '^LB_[A-Za-z0-9_]*' || true); do unset "$v"; done
 # diagnostyka: skad moze pochodzic zla wartosc initramfs
-grep -rsn 'LB_INITRAMFS' /etc/live 2>/dev/null || true
+grep -rsnE 'LB_(INITRAMFS|MIRROR|PARENT_MIRROR)' /etc/live 2>/dev/null || true
 echo "Uzywam live-build: $(lb --version 2>/dev/null || echo '?')"
 
+rm -rf "$NAME"   # czysty start - stara konfiguracja (np. z mirrorami Ubuntu) psuje budowe
 mkdir -p "$NAME" && cd "$NAME"
 lb clean --purge || true
 
 lb config \
   --mode debian \
   --initramfs live-boot \
+  --parent-mirror-bootstrap http://deb.debian.org/debian/ \
+  --parent-mirror-chroot http://deb.debian.org/debian/ \
+  --parent-mirror-chroot-security http://deb.debian.org/debian-security/ \
+  --parent-mirror-binary http://deb.debian.org/debian/ \
+  --parent-mirror-binary-security http://deb.debian.org/debian-security/ \
+  --mirror-bootstrap http://deb.debian.org/debian/ \
+  --mirror-chroot http://deb.debian.org/debian/ \
+  --mirror-chroot-security http://deb.debian.org/debian-security/ \
+  --mirror-binary http://deb.debian.org/debian/ \
+  --mirror-binary-security http://deb.debian.org/debian-security/ \
   --distribution bookworm \
   --architectures "$ARCH" \
   --archive-areas "main contrib non-free non-free-firmware" \
